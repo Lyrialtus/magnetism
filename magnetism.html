@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8"/>
+  <title>Magnetism (alpha)</title>
+</head>
+
+<body>
+  <script>
+  const body = document.body
+  const magnet = document.createElement('div')
+  const ball = document.createElement('div')
+
+  let movingDiv
+  let initialRadius
+  let x0
+  let y0
+  let vx0 = 0
+  let vy0 = 0
+  let d0
+  let frame
+  let restartAnimation = false
+  // Pseudo gravity
+  const gravity = 1
+
+  function getRadius () {
+    return window.innerWidth < window.innerHeight
+    ? window.innerWidth / 10
+    : window.innerHeight / 10
+  }
+
+  function init () {
+    // Set all initial HTML and CSS here, just because
+    body.style.overflow = 'hidden'
+    body.style.margin = '0'
+    body.style.background = 'radial-gradient(circle, #efefef, #ddd)'
+    body.style.height = '100vh'
+    body.style.width = '100vw'
+    initialRadius = getRadius()
+
+    magnet.style.background = 'radial-gradient(circle, #bbb, #999)'
+    magnet.style.position = 'absolute'
+    magnet.style.height = initialRadius * 2 + 'px'
+    magnet.style.width = initialRadius * 2 + 'px'
+    magnet.style.top = window.innerHeight / 2 - initialRadius + 'px'
+    magnet.style.left = window.innerWidth / 2 - initialRadius + 'px'
+    magnet.style.borderRadius = '50%'
+    magnet.style.cursor = 'move'
+    document.body.appendChild(magnet)
+
+    ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
+    ball.style.position = 'absolute'
+    ball.style.height = initialRadius + 'px'
+    ball.style.width = initialRadius + 'px'
+    ball.style.top = window.innerHeight / 2 - initialRadius / 2 + 'px'
+    ball.style.left = window.innerWidth / 1.2 - initialRadius + 'px'
+    ball.style.borderRadius = '50%'
+    ball.style.cursor = 'move'
+    document.body.appendChild(ball)
+
+    magnet.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+      movingDiv = magnet
+      y0 = event.clientY
+      x0 = event.clientX
+      window.addEventListener('mousemove', dragging)
+    })
+    ball.addEventListener('mousedown', (event) => {
+      event.preventDefault()
+      movingDiv = ball
+      y0 = event.clientY
+      x0 = event.clientX
+      window.cancelAnimationFrame(frame)
+      restartAnimation = true
+      window.addEventListener('mousemove', dragging)
+    })
+    window.addEventListener('mouseup', () => {
+      window.removeEventListener('mousemove', dragging)
+      body.style.cursor = 'default'
+      if (restartAnimation === true) {
+        frame = window.requestAnimationFrame(moveBall)
+        restartAnimation = false
+      }
+    })
+
+    frame = window.requestAnimationFrame(moveBall)
+  }
+
+  function moveBall () {
+    const shift = magnet.offsetHeight / 2 - ball.offsetHeight / 2
+    const dy = magnet.offsetTop - ball.offsetTop + shift
+    const dx = magnet.offsetLeft - ball.offsetLeft + shift
+    const distance = (dx ** 2 + dy ** 2) ** 0.5
+    // Still working...
+    vx0 += dx / distance * 2
+    vy0 += gravity + dy / distance * 2
+
+    if (distance < magnet.offsetHeight / 2 + ball.offsetHeight / 2) {
+      // Still working...
+      ball.style.top = ball.offsetTop + vy0 + 'px'
+      ball.style.left = ball.offsetLeft + vx0 + 'px'
+      vx0 = -vx0 * 0.8
+      vy0 = -vy0 * 0.8
+    }
+
+    if (ball.offsetTop + vy0 < 0) {
+      vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
+      ball.style.top = '0px'
+    } else if (ball.offsetTop + ball.offsetHeight + vy0 > window.innerHeight) {
+      vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
+      ball.style.top = window.innerHeight - ball.offsetHeight + 'px'
+    } else {
+      ball.style.top = ball.offsetTop + vy0 + 'px'
+    }
+
+    if (ball.offsetLeft + vx0 < 0) {
+      vx0 = -vx0
+      ball.style.left = '0px'
+    } else if (ball.offsetLeft + ball.offsetWidth + vx0 > window.innerWidth) {
+      vx0 = -vx0
+      ball.style.top = window.innerWidth - ball.offsetWidth + 'px'
+    } else {
+      ball.style.left = ball.offsetLeft + vx0 + 'px'
+    }
+
+    // Normal condition will be set later
+    if (frame > 2000) {
+      window.cancelAnimationFrame(frame)
+      return;
+    }
+
+    d0 = distance
+    frame = window.requestAnimationFrame(moveBall)
+  }
+
+  function dragging (event) {
+    body.style.cursor = 'move'
+    const newTop = movingDiv.offsetTop - y0 + event.clientY
+    const newLeft = movingDiv.offsetLeft - x0 + event.clientX
+
+    if (newTop < 0) {
+      movingDiv.style.top = '0px'
+    } else if (newTop + movingDiv.offsetHeight > window.innerHeight) {
+      movingDiv.style.top = window.innerHeight - movingDiv.offsetHeight + 'px'
+    } else {
+      movingDiv.style.top = newTop + 'px'
+    }
+
+    if (newLeft < 0) {
+      movingDiv.style.left = '0px'
+    } else if (newLeft + movingDiv.offsetWidth > window.innerWidth) {
+      movingDiv.style.left = window.innerWidth - movingDiv.offsetWidth + 'px'
+    } else {
+      movingDiv.style.left = newLeft + 'px'
+    }
+
+    if (event.clientY > 0 && event.clientY < window.innerHeight) {
+      y0 = event.clientY
+    }
+
+    if (event.clientX > 0 && event.clientX < window.innerWidth) {
+      x0 = event.clientX
+    }
+  }
+
+  init()
+  </script>
+</body>
+
+</html>
