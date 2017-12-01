@@ -1,5 +1,5 @@
 # Magnetism
 
-Moving ball and fixed "magnet" ball. Divs, no canvas. Only JavaSctipt.
+A moving ball and a fixed "magnet" ball. Random physics. Divs, no canvas. Only JavaSctipt.
 
 *Still under development...*
