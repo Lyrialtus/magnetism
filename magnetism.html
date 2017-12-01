@@ -11,6 +11,12 @@
   const body = document.body
   const magnet = document.createElement('div')
   const ball = document.createElement('div')
+  const stopButton = document.createElement('button')
+  stopButton.style.position = 'absolute'
+  stopButton.style.margin = '10px'
+  stopButton.textContent = 'Stop'
+  stopButton.onclick = stop
+  document.body.appendChild(stopButton)
 
   let movingDiv
   let initialRadius
@@ -18,17 +24,10 @@
   let y0
   let vx0 = 0
   let vy0 = 0
-  let d0
   let frame
   let restartAnimation = false
   // Pseudo gravity
   const gravity = 1
-
-  function getRadius () {
-    return window.innerWidth < window.innerHeight
-    ? window.innerWidth / 10
-    : window.innerHeight / 10
-  }
 
   function init () {
     // Set all initial HTML and CSS here, just because
@@ -53,7 +52,7 @@
     ball.style.position = 'absolute'
     ball.style.height = initialRadius + 'px'
     ball.style.width = initialRadius + 'px'
-    ball.style.top = window.innerHeight / 2 - initialRadius / 2 + 'px'
+    ball.style.top = window.innerHeight / 1.2 - initialRadius + 'px'
     ball.style.left = window.innerWidth / 1.2 - initialRadius + 'px'
     ball.style.borderRadius = '50%'
     ball.style.cursor = 'move'
@@ -64,27 +63,58 @@
       movingDiv = magnet
       y0 = event.clientY
       x0 = event.clientX
-      window.addEventListener('mousemove', dragging)
+      window.addEventListener('mousemove', drag)
     })
     ball.addEventListener('mousedown', (event) => {
       event.preventDefault()
       movingDiv = ball
       y0 = event.clientY
       x0 = event.clientX
-      window.cancelAnimationFrame(frame)
-      restartAnimation = true
-      window.addEventListener('mousemove', dragging)
+      if (stopButton.textContent === 'Stop') {
+        window.cancelAnimationFrame(frame)
+        restartAnimation = true
+      }
+      window.addEventListener('mousemove', drag)
     })
     window.addEventListener('mouseup', () => {
-      window.removeEventListener('mousemove', dragging)
+      window.removeEventListener('mousemove', drag)
       body.style.cursor = 'default'
       if (restartAnimation === true) {
         frame = window.requestAnimationFrame(moveBall)
         restartAnimation = false
       }
     })
+    window.addEventListener("resize", () => {
+      initialRadius = getRadius()
+      magnet.style.height = initialRadius * 2 + 'px'
+      magnet.style.width = initialRadius * 2 + 'px'
+      ball.style.height = initialRadius + 'px'
+      ball.style.width = initialRadius + 'px'
+    });
 
     frame = window.requestAnimationFrame(moveBall)
+  }
+
+  function stop () {
+    stopButton.textContent = 'Start'
+    ball.style.background = 'radial-gradient(circle, #bbb, #999)'
+    window.cancelAnimationFrame(frame)
+    stopButton.onclick = start
+    vx0 = 0
+    vy0 = 0
+  }
+
+  function start () {
+    stopButton.textContent = 'Stop'
+    ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
+    frame = window.requestAnimationFrame(moveBall)
+    stopButton.onclick = stop
+  }
+
+  function getRadius () {
+    return window.innerWidth < window.innerHeight
+    ? window.innerWidth / 10
+    : window.innerHeight / 10
   }
 
   function moveBall () {
@@ -92,18 +122,20 @@
     const dy = magnet.offsetTop - ball.offsetTop + shift
     const dx = magnet.offsetLeft - ball.offsetLeft + shift
     const distance = (dx ** 2 + dy ** 2) ** 0.5
-    // Still working...
+    // TODO: find something better?
     vx0 += dx / distance * 2
     vy0 += gravity + dy / distance * 2
 
     if (distance < magnet.offsetHeight / 2 + ball.offsetHeight / 2) {
-      // Still working...
+      // TODO: improve sticking...
+      vx0 = -vx0 * 0.5
+      vy0 = -vy0 * 0.5
       ball.style.top = ball.offsetTop + vy0 + 'px'
       ball.style.left = ball.offsetLeft + vx0 + 'px'
-      vx0 = -vx0 * 0.8
-      vy0 = -vy0 * 0.8
+
     }
 
+    // TODO: investigate lags!
     if (ball.offsetTop + vy0 < 0) {
       vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
       ball.style.top = '0px'
@@ -115,26 +147,19 @@
     }
 
     if (ball.offsetLeft + vx0 < 0) {
-      vx0 = -vx0
+      vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
       ball.style.left = '0px'
     } else if (ball.offsetLeft + ball.offsetWidth + vx0 > window.innerWidth) {
-      vx0 = -vx0
+      vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
       ball.style.left = window.innerWidth - ball.offsetWidth + 'px'
     } else {
       ball.style.left = ball.offsetLeft + vx0 + 'px'
     }
 
-    // Normal condition will be set later
-    if (frame > 2000) {
-      window.cancelAnimationFrame(frame)
-      return;
-    }
-
-    d0 = distance
     frame = window.requestAnimationFrame(moveBall)
   }
 
-  function dragging (event) {
+  function drag (event) {
     body.style.cursor = 'move'
     const newTop = movingDiv.offsetTop - y0 + event.clientY
     const newLeft = movingDiv.offsetLeft - x0 + event.clientX
