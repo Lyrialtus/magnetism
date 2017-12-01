@@ -119,7 +119,7 @@
       ball.style.left = '0px'
     } else if (ball.offsetLeft + ball.offsetWidth + vx0 > window.innerWidth) {
       vx0 = -vx0
-      ball.style.top = window.innerWidth - ball.offsetWidth + 'px'
+      ball.style.left = window.innerWidth - ball.offsetWidth + 'px'
     } else {
       ball.style.left = ball.offsetLeft + vx0 + 'px'
     }
