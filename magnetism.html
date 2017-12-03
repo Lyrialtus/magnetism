@@ -11,12 +11,7 @@
   const body = document.body
   const magnet = document.createElement('div')
   const ball = document.createElement('div')
-  const stopButton = document.createElement('button')
-  stopButton.style.position = 'absolute'
-  stopButton.style.margin = '10px'
-  stopButton.textContent = 'Stop'
-  stopButton.onclick = stop
-  document.body.appendChild(stopButton)
+  const stopButton = document.createElement('div')
 
   let movingDiv
   let initialRadius
@@ -37,6 +32,20 @@
     body.style.height = '100vh'
     body.style.width = '100vw'
     initialRadius = getRadius()
+
+    stopButton.style.cursor = 'pointer'
+    stopButton.style.position = 'absolute'
+    stopButton.style.margin = '10px'
+    stopButton.style.height = '50px'
+    stopButton.style.width = '50px'
+    stopButton.style.borderRadius = '50%'
+    stopButton.style.background = 'radial-gradient(circle, #eee, #bbb)'
+    stopButton.style.textAlign = 'center'
+    stopButton.style.verticalAlign = 'middle'
+    stopButton.style.lineHeight = '50px'
+    stopButton.textContent = 'Stop'
+    stopButton.onclick = stop
+    document.body.appendChild(stopButton)
 
     magnet.style.background = 'radial-gradient(circle, #bbb, #999)'
     magnet.style.position = 'absolute'
@@ -98,6 +107,7 @@
   function stop () {
     stopButton.textContent = 'Start'
     ball.style.background = 'radial-gradient(circle, #bbb, #999)'
+    stopButton.style.background = 'radial-gradient(circle, #eef, #aaf)'
     window.cancelAnimationFrame(frame)
     stopButton.onclick = start
     vx0 = 0
@@ -107,6 +117,7 @@
   function start () {
     stopButton.textContent = 'Stop'
     ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
+    stopButton.style.background = 'radial-gradient(circle, #eee, #bbb)'
     frame = window.requestAnimationFrame(moveBall)
     stopButton.onclick = stop
   }
