@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8"/>
-  <title>Magnetism (alpha)</title>
+  <title>Magnetism</title>
 </head>
 
 <body>
@@ -11,14 +11,14 @@
   const body = document.body
   const magnet = document.createElement('div')
   const ball = document.createElement('div')
-  const stopButton = document.createElement('div')
+  const stopBall = document.createElement('div')
 
   let movingDiv
   let initialRadius
   let x0
   let y0
-  let vx0 = 0
-  let vy0 = 0
+  let vx = 0
+  let vy = 0
   let frame
   let restartAnimation = false
   // Pseudo gravity
@@ -29,23 +29,35 @@
     body.style.overflow = 'hidden'
     body.style.margin = '0'
     body.style.background = 'radial-gradient(circle, #efefef, #ddd)'
+    body.style.fontFamily = 'Arial, sans-serif'
     body.style.height = '100vh'
     body.style.width = '100vw'
     initialRadius = getRadius()
 
-    stopButton.style.cursor = 'pointer'
-    stopButton.style.position = 'absolute'
-    stopButton.style.margin = '10px'
-    stopButton.style.height = '50px'
-    stopButton.style.width = '50px'
-    stopButton.style.borderRadius = '50%'
-    stopButton.style.background = 'radial-gradient(circle, #eee, #bbb)'
-    stopButton.style.textAlign = 'center'
-    stopButton.style.verticalAlign = 'middle'
-    stopButton.style.lineHeight = '50px'
-    stopButton.textContent = 'Stop'
-    stopButton.onclick = stop
-    document.body.appendChild(stopButton)
+    stopBall.style.cursor = 'pointer'
+    stopBall.style.position = 'absolute'
+    stopBall.style.margin = '10px'
+    stopBall.style.height = '50px'
+    stopBall.style.width = '50px'
+    stopBall.style.borderRadius = '50%'
+    stopBall.style.background = 'radial-gradient(circle, #eee, #bbb)'
+    stopBall.style.textAlign = 'center'
+    stopBall.style.verticalAlign = 'middle'
+    stopBall.style.lineHeight = '50px'
+    stopBall.style.userSelect = 'none'
+    stopBall.textContent = 'Stop'
+    stopBall.onclick = stop
+    document.body.appendChild(stopBall)
+
+    ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
+    ball.style.position = 'absolute'
+    ball.style.height = initialRadius + 'px'
+    ball.style.width = initialRadius + 'px'
+    ball.style.top = window.innerHeight / 1.1 - initialRadius + 'px'
+    ball.style.left = window.innerWidth / 1.2 - initialRadius + 'px'
+    ball.style.borderRadius = '50%'
+    ball.style.cursor = 'move'
+    document.body.appendChild(ball)
 
     magnet.style.background = 'radial-gradient(circle, #bbb, #999)'
     magnet.style.position = 'absolute'
@@ -56,16 +68,6 @@
     magnet.style.borderRadius = '50%'
     magnet.style.cursor = 'move'
     document.body.appendChild(magnet)
-
-    ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
-    ball.style.position = 'absolute'
-    ball.style.height = initialRadius + 'px'
-    ball.style.width = initialRadius + 'px'
-    ball.style.top = window.innerHeight / 1.2 - initialRadius + 'px'
-    ball.style.left = window.innerWidth / 1.2 - initialRadius + 'px'
-    ball.style.borderRadius = '50%'
-    ball.style.cursor = 'move'
-    document.body.appendChild(ball)
 
     magnet.addEventListener('mousedown', (event) => {
       event.preventDefault()
@@ -79,7 +81,7 @@
       movingDiv = ball
       y0 = event.clientY
       x0 = event.clientX
-      if (stopButton.textContent === 'Stop') {
+      if (stopBall.textContent === 'Stop') {
         window.cancelAnimationFrame(frame)
         restartAnimation = true
       }
@@ -105,21 +107,21 @@
   }
 
   function stop () {
-    stopButton.textContent = 'Start'
+    stopBall.textContent = 'Start'
     ball.style.background = 'radial-gradient(circle, #bbb, #999)'
-    stopButton.style.background = 'radial-gradient(circle, #eef, #aaf)'
+    stopBall.style.background = 'radial-gradient(circle, #eef, #aaf)'
     window.cancelAnimationFrame(frame)
-    stopButton.onclick = start
-    vx0 = 0
-    vy0 = 0
+    stopBall.onclick = start
+    vx = 0
+    vy = 0
   }
 
   function start () {
-    stopButton.textContent = 'Stop'
+    stopBall.textContent = 'Stop'
     ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
-    stopButton.style.background = 'radial-gradient(circle, #eee, #bbb)'
+    stopBall.style.background = 'radial-gradient(circle, #eee, #bbb)'
     frame = window.requestAnimationFrame(moveBall)
-    stopButton.onclick = stop
+    stopBall.onclick = stop
   }
 
   function getRadius () {
@@ -129,40 +131,50 @@
   }
 
   function moveBall () {
+    const minDistance = magnet.offsetHeight / 2 + ball.offsetHeight / 2
     const shift = magnet.offsetHeight / 2 - ball.offsetHeight / 2
     const dy = magnet.offsetTop - ball.offsetTop + shift
     const dx = magnet.offsetLeft - ball.offsetLeft + shift
     const distance = (dx ** 2 + dy ** 2) ** 0.5
-    // TODO: find something better?
-    vx0 += dx / distance * 2
-    vy0 += gravity + dy / distance * 2
+    // NOTE: Still don't really like these two lines
+    vx += dx / distance * 2
+    vy += gravity + dy / distance * 2
+    const newDistance = ((dx - vx) ** 2 + (dy - vy) ** 2) ** 0.5
 
-    if (distance < magnet.offsetHeight / 2 + ball.offsetHeight / 2) {
-      // TODO: improve sticking...
-      vx0 = -vx0 * 0.5
-      vy0 = -vy0 * 0.5
-      ball.style.top = ball.offsetTop + vy0 + 'px'
-      ball.style.left = ball.offsetLeft + vx0 + 'px'
+    // Ball-magnet collisions
+    if (newDistance <= minDistance) {
+      vx = -vx * (1 - 0.3 * Math.random()) + dx / distance
+      vy = -vy * (1 - 0.3 * Math.random()) + dy / distance
+      const slideY = dy - dy * minDistance / distance
+      const slideX = dx - dx * minDistance / distance
+      ball.style.top = ball.offsetTop + slideY + 'px'
+      ball.style.left = ball.offsetLeft + slideX + 'px'
     }
 
-    if (ball.offsetTop + vy0 < 0) {
-      vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
+    // Basic vertical movement
+    if (ball.offsetTop + vy < 0) {
+      vy = -vy * (1 - 0.2 * Math.random()) + dy / distance
       ball.style.top = '0px'
-    } else if (ball.offsetTop + ball.offsetHeight + vy0 >= window.innerHeight) {
-      vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
+    } else if (ball.offsetTop + ball.offsetHeight + vy > window.innerHeight) {
+      vy = -vy * (1 - 0.2 * Math.random()) + dy / distance
       ball.style.top = window.innerHeight - ball.offsetHeight - 1 + 'px'
     } else {
-      ball.style.top = ball.offsetTop + vy0 + 'px'
+      if (newDistance > minDistance) {
+        ball.style.top = ball.offsetTop + vy + 'px'
+      }
     }
 
-    if (ball.offsetLeft + vx0 < 0) {
-      vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
+    // Basic horizontal movement
+    if (ball.offsetLeft + vx < 0) {
+      vx = -vx * (1 - 0.2 * Math.random()) + dx / distance
       ball.style.left = '0px'
-    } else if (ball.offsetLeft + ball.offsetWidth + vx0 >= window.innerWidth) {
-      vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
+    } else if (ball.offsetLeft + ball.offsetWidth + vx > window.innerWidth) {
+      vx = -vx * (1 - 0.2 * Math.random()) + dx / distance
       ball.style.left = window.innerWidth - ball.offsetWidth - 1 + 'px'
     } else {
-      ball.style.left = ball.offsetLeft + vx0 + 'px'
+      if (newDistance > minDistance) {
+        ball.style.left = ball.offsetLeft + vx + 'px'
+      }
     }
 
     frame = window.requestAnimationFrame(moveBall)
