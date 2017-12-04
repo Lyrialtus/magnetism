@@ -93,13 +93,13 @@
         restartAnimation = false
       }
     })
-    window.addEventListener("resize", () => {
+    window.addEventListener('resize', () => {
       initialRadius = getRadius()
       magnet.style.height = initialRadius * 2 + 'px'
       magnet.style.width = initialRadius * 2 + 'px'
       ball.style.height = initialRadius + 'px'
       ball.style.width = initialRadius + 'px'
-    });
+    })
 
     frame = window.requestAnimationFrame(moveBall)
   }
@@ -143,16 +143,14 @@
       vy0 = -vy0 * 0.5
       ball.style.top = ball.offsetTop + vy0 + 'px'
       ball.style.left = ball.offsetLeft + vx0 + 'px'
-
     }
 
-    // TODO: investigate lags!
     if (ball.offsetTop + vy0 < 0) {
       vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
       ball.style.top = '0px'
-    } else if (ball.offsetTop + ball.offsetHeight + vy0 > window.innerHeight) {
+    } else if (ball.offsetTop + ball.offsetHeight + vy0 >= window.innerHeight) {
       vy0 = -vy0 * (1 - 0.2 * Math.random()) + dy / distance
-      ball.style.top = window.innerHeight - ball.offsetHeight + 'px'
+      ball.style.top = window.innerHeight - ball.offsetHeight - 1 + 'px'
     } else {
       ball.style.top = ball.offsetTop + vy0 + 'px'
     }
@@ -160,9 +158,9 @@
     if (ball.offsetLeft + vx0 < 0) {
       vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
       ball.style.left = '0px'
-    } else if (ball.offsetLeft + ball.offsetWidth + vx0 > window.innerWidth) {
+    } else if (ball.offsetLeft + ball.offsetWidth + vx0 >= window.innerWidth) {
       vx0 = -vx0 * (1 - 0.2 * Math.random()) + dx / distance
-      ball.style.left = window.innerWidth - ball.offsetWidth + 'px'
+      ball.style.left = window.innerWidth - ball.offsetWidth - 1 + 'px'
     } else {
       ball.style.left = ball.offsetLeft + vx0 + 'px'
     }
