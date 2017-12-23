@@ -29,7 +29,7 @@
     body.style.overflow = 'hidden'
     body.style.margin = '0'
     body.style.background = 'radial-gradient(circle, #efefef, #ddd)'
-    body.style.fontFamily = 'Arial, sans-serif'
+    body.style.fontFamily = 'Helvetica, sans-serif'
     body.style.height = '100vh'
     body.style.width = '100vw'
     initialRadius = getRadius()
@@ -47,17 +47,19 @@
     stopBall.style.userSelect = 'none'
     stopBall.textContent = 'Stop'
     stopBall.onclick = stop
-    document.body.appendChild(stopBall)
+    body.appendChild(stopBall)
 
     ball.style.background = 'radial-gradient(circle, #bbf, #99f)'
     ball.style.position = 'absolute'
     ball.style.height = initialRadius + 'px'
     ball.style.width = initialRadius + 'px'
-    ball.style.top = window.innerHeight / 1.1 - initialRadius + 'px'
-    ball.style.left = window.innerWidth / 1.2 - initialRadius + 'px'
+    const maxTop = window.innerHeight - initialRadius
+    const maxLeft = window.innerWidth - initialRadius
+    ball.style.top = maxTop * (1 - Math.random()) + 'px'
+    ball.style.left = maxLeft * (1 - 0.25 * Math.random()) + 'px'
     ball.style.borderRadius = '50%'
     ball.style.cursor = 'move'
-    document.body.appendChild(ball)
+    body.appendChild(ball)
 
     magnet.style.background = 'radial-gradient(circle, #bbb, #999)'
     magnet.style.position = 'absolute'
@@ -67,7 +69,7 @@
     magnet.style.left = window.innerWidth / 2 - initialRadius + 'px'
     magnet.style.borderRadius = '50%'
     magnet.style.cursor = 'move'
-    document.body.appendChild(magnet)
+    body.appendChild(magnet)
 
     magnet.addEventListener('mousedown', (event) => {
       event.preventDefault()
@@ -76,6 +78,7 @@
       x0 = event.clientX
       window.addEventListener('mousemove', drag)
     })
+
     ball.addEventListener('mousedown', (event) => {
       event.preventDefault()
       movingDiv = ball
@@ -87,6 +90,7 @@
       }
       window.addEventListener('mousemove', drag)
     })
+
     window.addEventListener('mouseup', () => {
       window.removeEventListener('mousemove', drag)
       body.style.cursor = 'default'
@@ -95,12 +99,27 @@
         restartAnimation = false
       }
     })
+    
     window.addEventListener('resize', () => {
       initialRadius = getRadius()
+
       magnet.style.height = initialRadius * 2 + 'px'
       magnet.style.width = initialRadius * 2 + 'px'
+      if (magnet.offsetTop + initialRadius * 2 > window.innerHeight) {
+        magnet.style.top = window.innerHeight - initialRadius * 2 - 1 + 'px'
+      }
+      if (magnet.offsetLeft + initialRadius * 2 > window.innerWidth) {
+        magnet.style.left = window.innerWidth - initialRadius * 2 - 1 + 'px'
+      }
+
       ball.style.height = initialRadius + 'px'
       ball.style.width = initialRadius + 'px'
+      if (ball.offsetTop + initialRadius > window.innerHeight) {
+        ball.style.top = window.innerHeight - initialRadius - 1 + 'px'
+      }
+      if (ball.offsetLeft + initialRadius > window.innerWidth) {
+        ball.style.left = window.innerWidth - initialRadius - 1 + 'px'
+      }
     })
 
     frame = window.requestAnimationFrame(moveBall)
@@ -136,15 +155,15 @@
     const dy = magnet.offsetTop - ball.offsetTop + shift
     const dx = magnet.offsetLeft - ball.offsetLeft + shift
     const distance = (dx ** 2 + dy ** 2) ** 0.5
-    // NOTE: Still don't really like these two lines
-    vx += dx / distance * 2
-    vy += gravity + dy / distance * 2
+    // Some magic, 500 represents strong "magnetism"
+    vx += (500 * dx / distance ** 2)
+    vy += gravity + (500 * dy / distance ** 2)
     const newDistance = ((dx - vx) ** 2 + (dy - vy) ** 2) ** 0.5
 
     // Ball-magnet collisions
     if (newDistance <= minDistance) {
-      vx = -vx * (1 - 0.3 * Math.random()) + dx / distance
-      vy = -vy * (1 - 0.3 * Math.random()) + dy / distance
+      vx = -vx * (1 - 0.2 * Math.random()) + dx / distance
+      vy = -vy * (1 - 0.2 * Math.random()) + dy / distance
       const slideY = dy - dy * minDistance / distance
       const slideX = dx - dx * minDistance / distance
       ball.style.top = ball.offsetTop + slideY + 'px'
